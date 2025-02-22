@@ -1,0 +1,1 @@
+# BMSTU_CS_Project_2025
