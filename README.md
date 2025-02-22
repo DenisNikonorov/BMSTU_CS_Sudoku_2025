@@ -1,1 +1,1 @@
-# BMSTU_CS_Project_2025
+# BMSTU_CS_Sudoku_2025
