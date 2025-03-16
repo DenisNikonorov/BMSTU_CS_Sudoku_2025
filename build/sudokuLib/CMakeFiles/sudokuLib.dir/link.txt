@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsudokuLib.a CMakeFiles/sudokuLib.dir/sudokuLib.cpp.o
+/usr/bin/ranlib libsudokuLib.a

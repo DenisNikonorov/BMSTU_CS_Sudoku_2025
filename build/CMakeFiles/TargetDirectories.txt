@@ -1,0 +1,6 @@
+/home/ekaterina/bmstu/BMSTU_CS_Sudoku_2025/build/CMakeFiles/Sudoku.dir
+/home/ekaterina/bmstu/BMSTU_CS_Sudoku_2025/build/CMakeFiles/edit_cache.dir
+/home/ekaterina/bmstu/BMSTU_CS_Sudoku_2025/build/CMakeFiles/rebuild_cache.dir
+/home/ekaterina/bmstu/BMSTU_CS_Sudoku_2025/build/sudokuLib/CMakeFiles/sudokuLib.dir
+/home/ekaterina/bmstu/BMSTU_CS_Sudoku_2025/build/sudokuLib/CMakeFiles/edit_cache.dir
+/home/ekaterina/bmstu/BMSTU_CS_Sudoku_2025/build/sudokuLib/CMakeFiles/rebuild_cache.dir

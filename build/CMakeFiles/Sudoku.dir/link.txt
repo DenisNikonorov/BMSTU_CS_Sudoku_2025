@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/Sudoku.dir/sources/main.cpp.o CMakeFiles/Sudoku.dir/sources/game.cpp.o -o Sudoku  sudokuLib/libsudokuLib.a 
