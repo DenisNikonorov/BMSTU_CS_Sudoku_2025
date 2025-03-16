@@ -5,7 +5,7 @@
 
 class Cell {
     private:
-    bool isVisible = false;
+    bool isVisible = true;
     int value = 0;
 
     public:
@@ -14,6 +14,9 @@ class Cell {
 
     void SetValue(int value) { this->value = value; }
     int GetValue() { return value; }
+
+    void SetVisible(bool visible) { isVisible = visible; }
+    bool GetVisible() { return isVisible; }
 
     friend std::ostream& operator<<(std::ostream& out, const Cell& source) {
         out << "is visible: " << source.isVisible << '\n' << "value: " << source.value << '\n';

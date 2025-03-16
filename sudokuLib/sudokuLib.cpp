@@ -13,10 +13,10 @@ const int kDefaultFieldColumns = 9;
 const int kCellValuesRangeBegin = 0;
 const int kCellValuesRangeEnd = 9;
 
-int RandInt() {
+int RandInt(int rangeBegin, int rangeEnd) {
     std::random_device r{};
     std::default_random_engine randomEngine(r());
-    std::uniform_int_distribution distribution(kCellValuesRangeBegin, kCellValuesRangeEnd);
+    std::uniform_int_distribution distribution(rangeBegin, rangeEnd);
 
     return distribution(randomEngine);
 }
@@ -37,7 +37,7 @@ void FillBox(Cell** field, size_t row, size_t col) {
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 3; ++j) {
             do {
-                value = RandInt();
+                value = RandInt(kCellValuesRangeBegin, kCellValuesRangeEnd);
             } while (!UniqInBox(field, row, col, value));
             field[row + i][col + j].SetValue(value);
         }
@@ -146,7 +146,7 @@ std::ostream& operator<<(std::ostream& out, const Field& source) {
     for (size_t i = 0; i < source.rows; ++i) {
         std::cout << startRedColor << kSideSymbol << endRedColor;
         for (size_t j = 0; j < source.columns; ++j) {
-            if (source.field[i][j].GetValue() != 0) {
+            if (source.field[i][j].GetValue() != 0 && source.field[i][j].GetVisible() == true) {
                 if ((j+1)%3 == 0) {
                     std::cout << "  " << source.field[i][j].GetValue() << "  " << startRedColor << kSideSymbol << endRedColor;
                 } else {
