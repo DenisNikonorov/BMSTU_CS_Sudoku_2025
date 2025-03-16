@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.23)
 
 set(project "sudokuLib")
-project(${proect})
+project(${project})
 
 set(CMAKE_CXX_STANDARD 20)
 

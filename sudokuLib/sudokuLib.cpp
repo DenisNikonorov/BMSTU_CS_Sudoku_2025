@@ -131,6 +131,19 @@ void Field::FillField() {
     }
 }
 
+void Field::MakeNCellsInvisible(int invisibleCellsCount) {
+    int currentInvisibleCellsCount = 0;
+    while (currentInvisibleCellsCount < invisibleCellsCount){
+        size_t row = RandInt(0, 8);
+        size_t col = RandInt(0, 8);
+
+        if (field[row][col].GetVisible() != false) {
+            field[row][col].SetVisible(false);
+            currentInvisibleCellsCount++;
+        }
+    }
+}
+
 std::ostream& operator<<(std::ostream& out, const Field& source) {
     const char kCnnectorSymbol = '+';
     const char kSideSymbol = '|';
