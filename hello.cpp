@@ -3,6 +3,6 @@
 int main(int, char**) {
     std::cout << "Hello, world!" << '\n';
     std::cout << "Hello, world by Ksuuuu!" << '\n';
-    std::cout << "Hello, world by Katya!"
+    std::cout << "Hello, world by Katya!" << '\n';
     return 0;
 }
