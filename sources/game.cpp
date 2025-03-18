@@ -2,10 +2,9 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <vector>
 
 namespace {
-const int kEasyDifficultyInvisibleCells = 2;
+const int kEasyDifficultyInvisibleCells = 30;
 const int kMediumDifficultyInvisibleCells = 50;
 const int kHardDifficultyInvisibleCells = 60;
 
@@ -17,22 +16,7 @@ void PrintDifficulty() {
     std::cout << "Выберите сложность:\n  1. Легкая\n  2. Средняя\n  3. Сложная\n";
 }
 
-bool CodeIsNull(char* code) {
-    int nullCellCount = 0;
-    for (size_t i = 0; i < std::strlen(code); ++i) {
-        if (code[i] == '0') {
-            nullCellCount++;
-        }
-    }
-    if (nullCellCount == 80) {
-        return true;
-    }
-
-    return false;
-}
-
 void CodeFill(Field& f, char* code, char* mask) {
-    // char a = '2'; -48
     Cell** field = f.GetField();
 
     size_t codeSymbolIndex = 0;
@@ -43,6 +27,17 @@ void CodeFill(Field& f, char* code, char* mask) {
                 field[i][j].SetVisible(false);
             }
             codeSymbolIndex++;
+        }
+    }
+}
+
+void EmptyField(Field& f) {
+    Cell** field = f.GetField();
+
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            field[i][j].SetValue(0);
+            field[i][j].SetVisible(false);
         }
     }
 }
@@ -65,7 +60,42 @@ void GetDataFromFile(Field& field, const char* fileName) {
     fin.close();
 }
 
-void Play(Field& f, int& errorsCount) {
+void WriteData(Field& f, const char* fileName, int errorsCount) {
+    std::ofstream fout(fileName);
+
+    if (!fout.is_open()) {
+        throw std::runtime_error("Error opening file");
+    }
+
+    char* code = new char[81];
+    char* mask = new char[81];
+
+    Cell** field = f.GetField();
+
+    int symbolIndex = 0;
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            char buffer = field[i][j].GetValue();
+            code[symbolIndex] = buffer + 48;
+
+            if (field[i][j].GetVisible() == false) {
+                mask[symbolIndex] = '0';
+            } else {
+                mask[symbolIndex] = '1';
+            }
+
+            symbolIndex++;
+        }
+    }
+
+    fout << code << '\n' << mask << '\n' << errorsCount;
+
+    delete[] code;
+    delete[] mask;
+    fout.close();
+}
+
+void PlaceNumbers(Field& f, int& errorsCount) {
     Cell** field = f.GetField();
     size_t currentRow = 0;
     size_t currentColumn = 0;
@@ -95,6 +125,26 @@ void Play(Field& f, int& errorsCount) {
             ++errorsCount;
             std::cout << "Ошибка, количество ошибок: " << errorsCount << '\n';
         }
+        WriteData(f, "Data.txt", errorsCount);
+    }
+}
+
+void Play(Field& field) {
+    int errorsCount = 0;
+    WriteData(field, "Data.txt", errorsCount);
+
+    Field initialField;
+    GetDataFromFile(initialField, "Data.txt");
+
+    PlaceNumbers(field, errorsCount);
+    if (field.IsFull()) {
+        std::cout << field;
+        std::cout << "УРА ПОБЕДА ЮХУ!!!!!\n";
+        EmptyField(field);
+        WriteData(field, "Data.txt", 0);
+    } else {
+        std::cout << "Нам тебя искренне жаль, попробуй еще раз :(\n";
+        WriteData(initialField, "Data.txt", 0);
     }
 }
 
@@ -103,29 +153,24 @@ void SelectDifficulty(Field& field) {
     PrintDifficulty();
     std::cout << "Ваш выбор: ";
     std::cin >> select;
-    int errorsCount = 0;
 
     switch (static_cast<Difficulty>(select)) {
         case Difficulty::Easy: {
             field.MakeNCellsInvisible(kEasyDifficultyInvisibleCells);
-            Play(field, errorsCount);
-            if (field.IsFull()) {
-                std::cout << field;
-                std::cout << "УРА ПОБЕДА ЮХУ!!!!!\n";
-            } else {
-                std::cout << "Нам тебя искренне жаль, попробуй еще раз :(\n";
-            }
+            Play(field);
             break;
         }
         case Difficulty::Medium: {
             field.MakeNCellsInvisible(kMediumDifficultyInvisibleCells);
+            Play(field);
             break;
         }
         case Difficulty::Hard: {
             field.MakeNCellsInvisible(kHardDifficultyInvisibleCells);
+            Play(field);
             break;
         }
-        default:{
+        default: {
             std::cout << "Неверный формат ввода выбора сложности. Попробуйте ввести цифру 1-3.\n";
             break;
         }
@@ -144,7 +189,14 @@ void SelectMenuItem(Field& field, bool& isRunning) {
             break;
         }
         case MainMenu::ContinueGame: {
-            //вызов фунции ContinueGame
+            GetDataFromFile(field, "Data.txt");
+            if (field.IsEmpty()) {
+                std::cout << "Продолжать нечего, поле пустое! Начните новую игру!\n";
+                break;
+            } else {
+                int errorsCount = 0;
+                Play(field);
+            }
             break;
         }
         case MainMenu::Exit: {
@@ -162,12 +214,10 @@ void RunGame() {
     try {
         Field field;
 
-        GetDataFromFile(field, "Data.txt");
-        std::cout << field;
+        while (isRunning == true) {
+            SelectMenuItem(field, isRunning);
+        }
 
-        // while (isRunning == true) {
-        //     SelectMenuItem(field, isRunning);
-        // }
         field.~Field();
     } catch (std::runtime_error& error) {
         std::cerr << error.what() << '\n';

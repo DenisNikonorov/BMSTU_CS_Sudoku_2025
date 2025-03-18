@@ -15,7 +15,9 @@ enum class Difficulty : int {
 };
 
 namespace Game {
-void Play(Field&, int&);
+void GetDataFromFile(Field&, const char*);
+void WriteData(Field&, const char*, int);
+void PlaceNumbers(Field&, int&);
 
 void SelectDifficulty(Field&);
 void SelectMenuItem(Field&, bool&);
