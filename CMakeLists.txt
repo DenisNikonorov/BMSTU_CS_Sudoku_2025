@@ -5,6 +5,8 @@ project(${project})
 
 set(CMAKE_CXX_STANDARD 20)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sources/Data.txt ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
 set(${project}_SOURCES
     sources/main.cpp
     sources/game.cpp

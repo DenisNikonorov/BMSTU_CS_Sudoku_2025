@@ -1,5 +1,8 @@
 #include "game.h"
 #include <iostream>
+#include <fstream>
+#include <cstring>
+#include <vector>
 
 namespace {
 const int kEasyDifficultyInvisibleCells = 2;
@@ -13,9 +16,55 @@ void PrintMainMenuItems() {
 void PrintDifficulty() {
     std::cout << "Выберите сложность:\n  1. Легкая\n  2. Средняя\n  3. Сложная\n";
 }
+
+bool CodeIsNull(char* code) {
+    int nullCellCount = 0;
+    for (size_t i = 0; i < std::strlen(code); ++i) {
+        if (code[i] == '0') {
+            nullCellCount++;
+        }
+    }
+    if (nullCellCount == 80) {
+        return true;
+    }
+
+    return false;
+}
+
+void CodeFill(Field& f, char* code, char* mask) {
+    // char a = '2'; -48
+    Cell** field = f.GetField();
+
+    size_t codeSymbolIndex = 0;
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            field[i][j].SetValue(code[codeSymbolIndex] - 48);
+            if (mask[codeSymbolIndex] == '0') {
+                field[i][j].SetVisible(false);
+            }
+            codeSymbolIndex++;
+        }
+    }
+}
 } // namespace
 
 namespace Game {
+void GetDataFromFile(Field& field, const char* fileName) {
+    std::ifstream fin(fileName);
+
+    if (!fin.is_open()) {
+        throw std::runtime_error("Error opening file");
+    }
+
+    char codeBuffer[82];
+    char maskBuffer[82];
+
+    fin >> codeBuffer >> maskBuffer;
+    CodeFill(field, codeBuffer, maskBuffer);
+
+    fin.close();
+}
+
 void Play(Field& f, int& errorsCount) {
     Cell** field = f.GetField();
     size_t currentRow = 0;
@@ -44,9 +93,8 @@ void Play(Field& f, int& errorsCount) {
             field[currentRow][currentColumn].SetVisible(true);
         } else {
             ++errorsCount;
-            std::cout << "ошибка, количество ошибок: " << errorsCount << '\n';
+            std::cout << "Ошибка, количество ошибок: " << errorsCount << '\n';
         }
-
     }
 }
 
@@ -112,10 +160,14 @@ void SelectMenuItem(Field& field, bool& isRunning) {
 void RunGame() {
     bool isRunning = true;
     try {
-    Field field;
-        while (isRunning == true) {
-            SelectMenuItem(field, isRunning);
-        }
+        Field field;
+
+        GetDataFromFile(field, "Data.txt");
+        std::cout << field;
+
+        // while (isRunning == true) {
+        //     SelectMenuItem(field, isRunning);
+        // }
         field.~Field();
     } catch (std::runtime_error& error) {
         std::cerr << error.what() << '\n';
