@@ -132,9 +132,20 @@ void Field::FillField() {
 }
 
 bool Field::IsFull() {
-    for (size_t i = 0; i < 9; ++i) {
-        for (size_t j = 0; j < 9; ++j) {
+    for (size_t i = 0; i < kDefaultFieldRows; ++i) {
+        for (size_t j = 0; j < kDefaultFieldColumns; ++j) {
             if (field[i][j].GetVisible() == false) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool Field::IsEmpty() {
+    for (size_t i = 0; i < kDefaultFieldRows; ++i) {
+        for (size_t j = 0; j < kDefaultFieldColumns; ++j) {
+            if (field[i][j].GetValue() != 0) {
                 return false;
             }
         }

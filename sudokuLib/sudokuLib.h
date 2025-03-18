@@ -36,6 +36,7 @@ class Field {
     Cell** GetField() { return field; }
     void FillField();
     bool IsFull();
+    bool IsEmpty();
     void MakeNCellsInvisible(int);
     friend std::ostream& operator<<(std::ostream& out, const Field& source);
 
