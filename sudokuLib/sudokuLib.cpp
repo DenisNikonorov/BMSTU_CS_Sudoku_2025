@@ -131,6 +131,17 @@ void Field::FillField() {
     }
 }
 
+bool Field::IsFull() {
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            if (field[i][j].GetVisible() == false) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void Field::MakeNCellsInvisible(int invisibleCellsCount) {
     int currentInvisibleCellsCount = 0;
     while (currentInvisibleCellsCount < invisibleCellsCount){
