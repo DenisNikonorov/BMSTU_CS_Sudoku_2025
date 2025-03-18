@@ -2,7 +2,7 @@
 #include <iostream>
 
 namespace {
-const int kEasyDifficultyInvisibleCells = 30;
+const int kEasyDifficultyInvisibleCells = 2;
 const int kMediumDifficultyInvisibleCells = 50;
 const int kHardDifficultyInvisibleCells = 60;
 
@@ -16,15 +16,57 @@ void PrintDifficulty() {
 } // namespace
 
 namespace Game {
+void Play(Field& f, int& errorsCount) {
+    Cell** field = f.GetField();
+    size_t currentRow = 0;
+    size_t currentColumn = 0;
+    int guessValue = 0;
+
+    while (!f.IsFull() && errorsCount < 3) {
+        std::cout << f;
+        std::cout << "Введите строку, столбец и цифру: ";
+
+        std::cin >> currentRow >> currentColumn >> guessValue;
+
+        if (currentRow < 0 || currentRow > 9) {
+            throw std::runtime_error("Error: invalid row");
+        }
+
+        if (currentColumn < 0 || currentColumn > 9) {
+            throw std::runtime_error("Error: invalid column");
+        }
+
+        if (guessValue < 0 || guessValue > 9) {
+            throw std::runtime_error("Error: invalid value");
+        }
+
+        if (guessValue == field[currentRow][currentColumn].GetValue()) {
+            field[currentRow][currentColumn].SetVisible(true);
+        } else {
+            ++errorsCount;
+            std::cout << "ошибка, количество ошибок: " << errorsCount << '\n';
+        }
+
+    }
+}
+
 void SelectDifficulty(Field& field) {
     int select = 0;
     PrintDifficulty();
     std::cout << "Ваш выбор: ";
     std::cin >> select;
+    int errorsCount = 0;
 
     switch (static_cast<Difficulty>(select)) {
         case Difficulty::Easy: {
             field.MakeNCellsInvisible(kEasyDifficultyInvisibleCells);
+            Play(field, errorsCount);
+            if (field.IsFull()) {
+                std::cout << field;
+                std::cout << "УРА ПОБЕДА ЮХУ!!!!!\n";
+            } else {
+                std::cout << "Нам тебя искренне жаль, попробуй еще раз :(\n";
+            }
             break;
         }
         case Difficulty::Medium: {
@@ -36,7 +78,7 @@ void SelectDifficulty(Field& field) {
             break;
         }
         default:{
-            std::cout << "Неверный формат ввода выбора сложности. Попробуйте ввести цифру 1-3.";
+            std::cout << "Неверный формат ввода выбора сложности. Попробуйте ввести цифру 1-3.\n";
             break;
         }
     }
@@ -62,17 +104,21 @@ void SelectMenuItem(Field& field, bool& isRunning) {
             break;
         }
         default:
-            std::cout << "Неверный формат ввода выбора пункта меню. Попробуйте ввести цифру 1-3.";
+            std::cout << "Неверный формат ввода выбора пункта меню. Попробуйте ввести цифру 1-3.\n";
             break;
     }
 }
 
 void RunGame() {
     bool isRunning = true;
+    try {
     Field field;
-    while (isRunning == true) {
-        SelectMenuItem(field, isRunning);
+        while (isRunning == true) {
+            SelectMenuItem(field, isRunning);
+        }
+        field.~Field();
+    } catch (std::runtime_error& error) {
+        std::cerr << error.what() << '\n';
     }
-    field.~Field();
 }
 } // namespace Game
