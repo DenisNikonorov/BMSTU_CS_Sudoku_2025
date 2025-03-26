@@ -37,7 +37,7 @@ void EmptyField(Field& f) {
     for (size_t i = 0; i < 9; ++i) {
         for (size_t j = 0; j < 9; ++j) {
             field[i][j].SetValue(0);
-            field[i][j].SetVisible(false);
+            field[i][j].SetVisible(true);
         }
     }
 }
@@ -153,6 +153,7 @@ void SelectDifficulty(Field& field) {
     PrintDifficulty();
     std::cout << "Ваш выбор: ";
     std::cin >> select;
+    field.FillField();
 
     switch (static_cast<Difficulty>(select)) {
         case Difficulty::Easy: {
@@ -184,7 +185,7 @@ void SelectMenuItem(Field& field, bool& isRunning) {
     std::cin >> select;
     switch (static_cast<MainMenu>(select)) {
         case MainMenu::NewGame: {
-            field.FillField();
+            EmptyField(field);
             SelectDifficulty(field);
             break;
         }
@@ -192,6 +193,8 @@ void SelectMenuItem(Field& field, bool& isRunning) {
             GetDataFromFile(field, "Data.txt");
             if (field.IsEmpty()) {
                 std::cout << "Продолжать нечего, поле пустое! Начните новую игру!\n";
+                EmptyField(field);
+                WriteData(field, "Data.txt", 0);
                 break;
             } else {
                 int errorsCount = 0;
