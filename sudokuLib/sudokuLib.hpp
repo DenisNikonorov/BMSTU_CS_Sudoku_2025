@@ -35,21 +35,41 @@ class Cell {
     void Draw(sf::RenderWindow& window, int startX, int startY, sf::Vector2i mousePosition, sf::Font& font);
 };
 
-class Field {
-    private:
-    Cell** field = nullptr;
-    size_t rows = 9;
-    size_t columns = 9;
+class Field : protected Cell {
+  private:
+    Cell** field{};
+    int xFieldPosition{};
+    int yFieldPosition{};
+    bool isClickable{};
 
-    public:
+    void CreateField() {
+        field = new Cell*[9];
+        for (size_t i = 0; i < 9; ++i) {
+            field[i] = new Cell[9];
+            for (size_t j = 0; j < 9; ++j) {
+              Cell cell(60*j + xPosition, 60*i + yPosition, 60, 60);
+              field[i][j] = cell;
+            }
+        }
+    }
+
+  public:
     Field();
+    Field(int fieldX, int fieldY);
+    ~Field();
 
     Cell** GetField() { return field; }
     void FillField();
-    bool IsFull();
-    bool IsEmpty();
-    void MakeNCellsInvisible(int);
-    friend std::ostream& operator<<(std::ostream& out, const Field& source);
+    void MakeNCellsInvisible(int count);
+    void DrawField(sf::RenderWindow& window, int xFieldPosition, int yFieldPosition, sf::Vector2i mousePosition, sf::Font& font, int errorsCount);
+    bool IsFilled();
+    void ToggleClickable(bool clickable) { this->isClickable = clickable; }
+    bool GetClickable() { return this->isClickable; }
+    void MakeEmpty();
 
-    ~Field();
+    sf::Vector2i getPosition();
 };
+
+namespace CellFunctions {
+    void ToggleCell(Field& f, sf::Vector2i mousePosition); //Cell** field, sf::Vector2i mousePosition
+} // CellFunctions

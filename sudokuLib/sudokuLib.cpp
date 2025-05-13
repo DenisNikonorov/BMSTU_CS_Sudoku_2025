@@ -153,14 +153,25 @@ void Cell::Draw(sf::RenderWindow& window, int startX, int startY, sf::Vector2i m
 }
 // class Cell functions
 
+//class Field functions
 Field::Field() {
-    field = new Cell*[9];
-    for (size_t i = 0; i < 9; ++i) {
-        field[i] = new Cell[9];
-    }
+    this->xFieldPosition = 0;
+    this->yFieldPosition = 0;
+    this->isClickable = true;
+    CreateField();
+}
 
-    this->rows = 9;
-    this->columns = 9;
+Field::Field(int fieldX, int fieldY) {
+    this->xFieldPosition = fieldX;
+    this->yFieldPosition = fieldY;
+    CreateField();
+}
+
+Field::~Field() {
+    for (size_t i = 0; i < 9; ++i) {
+        delete[] field[i];
+    }
+    delete[] field;
 }
 
 void Field::FillField() {
@@ -171,46 +182,134 @@ void Field::FillField() {
     for (size_t i = 0; i < 9; ++i) {
         for (size_t j = 0; j < 9; ++j) {
             FillOther(field, i, j);
+            field[i][j].SetVisible(true);
         }
     }
 }
 
-bool Field::IsFull() {
-    for (size_t i = 0; i < 9; ++i) {
-        for (size_t j = 0; j < 9; ++j) {
-            if (field[i][j].GetVisible() == false) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-bool Field::IsEmpty() {
-    for (size_t i = 0; i < 9; ++i) {
-        for (size_t j = 0; j < 9; ++j) {
-            if (field[i][j].GetValue() != 0) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-void Field::MakeNCellsInvisible(int invisibleCellsCount) {
+void Field::MakeNCellsInvisible(int count) {
     int currentInvisibleCellsCount = 0;
-    while (currentInvisibleCellsCount < invisibleCellsCount){
+    while (currentInvisibleCellsCount < count) {
         size_t row = RandInt(0, 8);
-        size_t col = RandInt(0, 8);
+        size_t column = RandInt(0, 8);
 
-        if (field[row][col].GetVisible() != false) {
-            field[row][col].SetVisible(false);
+        if (field[row][column].GetVisible() != false) {
+            field[row][column].SetVisible(false);
+            field[row][column].SetPlaced(false);
             currentInvisibleCellsCount++;
         }
     }
 }
 
-Field::~Field() {
-    delete[] field;
-    field = nullptr;
+void Field::DrawField(sf::RenderWindow& window, int xFieldPosition, int yFieldPosition, sf::Vector2i mousePosition, sf::Font& font, int errorsCount) {
+    this->xFieldPosition = xFieldPosition;
+    this->yFieldPosition = yFieldPosition;
+
+    for (size_t i = 0; i < 9 ; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            field[i][j].Draw(window, xFieldPosition, yFieldPosition, mousePosition, font);
+        }
+    }
+
+    sf::Color smallFrameColor(255, 190, 200);
+    sf::Color bigFrameColor(65, 170, 255);
+    sf::RectangleShape* horizontalSmallFrame = new sf::RectangleShape[8];
+    for (size_t i = 0; i < 8; ++i) {
+        horizontalSmallFrame[i].setFillColor(smallFrameColor);
+        horizontalSmallFrame[i].setSize(sf::Vector2f(535, 5));
+        horizontalSmallFrame[i].setPosition(xFieldPosition, 60*i + yFieldPosition + 55);
+        window.draw(horizontalSmallFrame[i]);
+    }
+    delete[] horizontalSmallFrame;
+
+    sf::RectangleShape* verticalSmallFrame = new sf::RectangleShape[8];
+    for (size_t i = 0; i < 8; ++i) {
+        verticalSmallFrame[i].setFillColor(smallFrameColor);
+        verticalSmallFrame[i].setSize(sf::Vector2f(5, 535));
+        verticalSmallFrame[i].setPosition(60*i + xFieldPosition + 55, yFieldPosition);
+        window.draw(verticalSmallFrame[i]);
+    }
+    delete[] verticalSmallFrame;
+
+    sf::RectangleShape* horizontalBigFrame = new sf::RectangleShape[4];
+    for (size_t i = 0; i < 4; ++i) {
+        horizontalBigFrame[i].setFillColor(bigFrameColor);
+        horizontalBigFrame[i].setSize(sf::Vector2f(545, 5));
+        horizontalBigFrame[i].setPosition(xFieldPosition - 5, 180*i + yFieldPosition - 5);
+        window.draw(horizontalBigFrame[i]);
+    }
+    delete[] horizontalBigFrame;
+
+    sf::RectangleShape* verticalBigFrame = new sf::RectangleShape[4];
+    for (size_t i = 0; i < 4; ++i) {
+        verticalBigFrame[i].setFillColor(bigFrameColor);
+        verticalBigFrame[i].setSize(sf::Vector2f(5, 545));
+        verticalBigFrame[i].setPosition(180*i + xFieldPosition - 5, yFieldPosition - 5);
+        window.draw(verticalBigFrame[i]);
+    }
+    delete[] verticalBigFrame;
+
+    sf::Text errors;
+    errors.setFont(font);
+    errors.setString("Errors: " + std::to_string(errorsCount));
+    errors.setCharacterSize(24);
+    errors.setFillColor(sf::Color::Black);
+    errors.setPosition(10, 10);
+    window.draw(errors);
 }
+
+bool Field::IsFilled() {
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            if (field[i][j].GetPlaced() == false) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+sf::Vector2i Field::getPosition() {
+    sf::Vector2i position(xFieldPosition, yFieldPosition);
+    return position;
+}
+
+void Field::MakeEmpty() {
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            this->field[i][j].SetValue(0);
+            this->field[i][j].SetVisible(false);
+            this->field[i][j].SetPlaced(false);
+            this->isClickable = true;
+            this->field[i][j].SetColor(sf::Color::Black);
+            if (field[i][j].IsClicked()) {
+                field[i][j].SetClicked(false);
+            }
+        }
+    }
+}
+// class Field functions
+
+namespace CellFunctions {
+void ToggleCell(Field& f, sf::Vector2i mousePosition) {
+    Cell** field = f.GetField();
+
+    sf::Vector2i fieldPosition = f.getPosition();
+    mousePosition.x = mousePosition.x - fieldPosition.x;
+    mousePosition.y = mousePosition.y - fieldPosition.y;
+
+    int cellI = 0;
+    int cellJ = 0;
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            if (field[i][j].IsClickInCell(mousePosition)) {
+                field[i][j].Toggle();
+                cellI = i;
+                cellJ = j;
+            } else if (field[i][j].IsClicked() && !field[i][j].IsClickInCell(mousePosition)) {
+                field[i][j].Toggle();
+            }
+        }
+    }
+}
+} // CellFunctions
