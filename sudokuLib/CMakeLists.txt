@@ -10,7 +10,7 @@ set(${project}_SOURCES
 )
 
 set(${project}_HEADERS
-    sudokuLib.h
+    sudokuLib.hpp
 )
 
 add_library(${project}

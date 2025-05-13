@@ -1,17 +1,9 @@
-#include "sudokuLib.h"
 #include <iostream>
-#include <iomanip>
 #include <random>
-
-#define startRedColor "\033[1;31m"
-#define endRedColor "\033[0m"
+#include "sudokuLib.hpp"
 
 namespace {
-const int kDefaultFieldRows = 9;
-const int kDefaultFieldColumns = 9;
-
-const int kCellValuesRangeBegin = 0;
-const int kCellValuesRangeEnd = 9;
+const double kDefaultCellSide = 60.;
 
 int RandInt(int rangeBegin, int rangeEnd) {
     std::random_device r{};
@@ -37,28 +29,29 @@ void FillBox(Cell** field, size_t row, size_t col) {
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 3; ++j) {
             do {
-                value = RandInt(kCellValuesRangeBegin, kCellValuesRangeEnd);
+                value = RandInt(1, 9);
             } while (!UniqInBox(field, row, col, value));
             field[row + i][col + j].SetValue(value);
+            field[row + i][col + j].SetPlaced(true);
         }
     }
 }
 
 bool ElementUniq(Cell** field, size_t row, size_t col, int element) {
-    for (size_t i = 0; i < kDefaultFieldRows; ++i) {
+    for (int i = 0; i < 9; ++i) {
         if (field[row][i].GetValue() == element) {
             return false;
         }
     }
 
-    for (size_t i = 0; i < kDefaultFieldColumns; ++i) {
+    for (int i = 0; i < 9; ++i) {
         if (field[i][col].GetValue() == element) {
             return false;
         }
     }
 
-    for (size_t i = row-row%3; i < row-row%3+3; ++i) {
-        for (size_t j = col-col%3; j < col-col%3+3; ++j) {
+    for (int i = row-row%3; i < row-row%3+3; ++i) {
+        for (int j = col-col%3; j < col-col%3+3; ++j) {
             if (field[i][j].GetValue() == element) {
                 return false;
             }
@@ -84,6 +77,7 @@ bool FillOther(Cell** field, size_t i, size_t j) {
     for (int value = 1; value <= 9; ++value) {
         if (ElementUniq(field, i, j, value)) {
             field[i][j].SetValue(value);
+            field[i][j].SetPlaced(true);
             if (FillOther(field, i, j + 1)) {
                 return true;
             }
@@ -92,31 +86,81 @@ bool FillOther(Cell** field, size_t i, size_t j) {
     }
     return false;
 }
-
-void PrintLine(int size, const char* symbol) {
-    for (int i = 0; i < size; ++i) {
-        std::cout << symbol;
-    }
-}
 } // namespace
 
-Cell::Cell(bool isVisible, int value) {
-    if (value > kCellValuesRangeEnd || value < kCellValuesRangeBegin) {
-        throw std::runtime_error("Error: invalid value!");
-    }
-
-    this->isVisible = isVisible;
-    this->value = value;
+// class Cell functions
+Cell::Cell(double xPosition, double yPosition, double width, double height) {
+    this->xPosition = xPosition;
+    this->yPosition = yPosition;
+    this->width = kDefaultCellSide;
+    this->height = kDefaultCellSide;
+    this->onClick = false;
+    this->currentValue = 0;
+    this->textColor = sf::Color::Black;
+    this->isPlaced = false;
 }
 
-Field::Field() {
-    field = new Cell*[kDefaultFieldRows];
-    for (size_t i = 0; i < kDefaultFieldRows; ++i) {
-        field[i] = new Cell[kDefaultFieldColumns];
+bool Cell::IsClickInCell(sf::Vector2i clickPosition) {
+    return (clickPosition.x > this->xPosition && clickPosition.x < this->xPosition + this->width && clickPosition.y > this->yPosition && clickPosition.y < this->yPosition + this->height);
+}
+
+void Cell::Toggle() {
+    this->onClick = !onClick;
+}
+
+void Cell::PlaceValue(int value, int& errorsCount) {
+    if (value != currentValue) {
+        textColor = sf::Color::Red;
+        this->visibleValue = value;
+        this->isPlaced = false;
+        errorsCount++;
+    } else if (value == currentValue) {
+        textColor = sf::Color::Black;
+        this->visibleValue = this->currentValue;
+        this->isPlaced = true;
+    }
+    this->isVisible = true;
+}
+
+void Cell::Draw(sf::RenderWindow& window, int startX, int startY, sf::Vector2i mousePosition, sf::Font& font) {
+    sf::RectangleShape cell;
+    cell.setPosition(xPosition + startX, yPosition + startY);
+    cell.setSize(sf::Vector2f(width - 5, height - 5));
+
+    sf::Color clickedColor(190, 190, 190);
+    if (onClick) {
+        cell.setFillColor(clickedColor);
+    } else {
+        cell.setFillColor(sf::Color::White);
     }
 
-    this->rows = kDefaultFieldRows;
-    this->columns = kDefaultFieldColumns;
+    sf::Text cellValue;
+    cellValue.setFont(font);
+    cellValue.setCharacterSize(24);
+
+    if (isPlaced) {
+        visibleValue = currentValue;
+    }
+    cellValue.setString(std::to_string(visibleValue));
+
+    cellValue.setFillColor(textColor);
+    cellValue.setPosition(xPosition + startX + width / 4 + 5, yPosition + startY + height / 4);
+
+    window.draw(cell);
+    if (isVisible) {
+        window.draw(cellValue);
+    }
+}
+// class Cell functions
+
+Field::Field() {
+    field = new Cell*[9];
+    for (size_t i = 0; i < 9; ++i) {
+        field[i] = new Cell[9];
+    }
+
+    this->rows = 9;
+    this->columns = 9;
 }
 
 void Field::FillField() {
@@ -132,8 +176,8 @@ void Field::FillField() {
 }
 
 bool Field::IsFull() {
-    for (size_t i = 0; i < kDefaultFieldRows; ++i) {
-        for (size_t j = 0; j < kDefaultFieldColumns; ++j) {
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
             if (field[i][j].GetVisible() == false) {
                 return false;
             }
@@ -143,8 +187,8 @@ bool Field::IsFull() {
 }
 
 bool Field::IsEmpty() {
-    for (size_t i = 0; i < kDefaultFieldRows; ++i) {
-        for (size_t j = 0; j < kDefaultFieldColumns; ++j) {
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
             if (field[i][j].GetValue() != 0) {
                 return false;
             }
@@ -164,56 +208,6 @@ void Field::MakeNCellsInvisible(int invisibleCellsCount) {
             currentInvisibleCellsCount++;
         }
     }
-}
-
-std::ostream& operator<<(std::ostream& out, const Field& source) {
-    const char kCnnectorSymbol = '+';
-    const char kSideSymbol = '|';
-    const char kLineSymbol = '-';
-    const char kEmpty = ' ';
-
-    std::cout << startRedColor << kCnnectorSymbol << endRedColor;
-    for (int i = 0; i < 9; ++i) {
-        std::cout << startRedColor << std::setw(6) << std::setfill(kLineSymbol) << kCnnectorSymbol << endRedColor;
-    }
-    std::cout << '\n';
-
-    for (size_t i = 0; i < source.rows; ++i) {
-        std::cout << startRedColor << kSideSymbol << endRedColor;
-        for (size_t j = 0; j < source.columns; ++j) {
-            if (source.field[i][j].GetValue() != 0 && source.field[i][j].GetVisible() == true) {
-                if ((j+1)%3 == 0) {
-                    std::cout << "  " << source.field[i][j].GetValue() << "  " << startRedColor << kSideSymbol << endRedColor;
-                } else {
-                    std::cout << "  " << source.field[i][j].GetValue() << "  " << kSideSymbol;
-                }
-            } else {
-                if ((j+1)%3 == 0) {
-                    PrintLine(5, " ");
-                    std::cout << startRedColor << kSideSymbol << endRedColor;
-                } else {
-                    std::cout << std::setw(6) << std::setfill(kEmpty) << kSideSymbol;
-                }
-            }
-        }
-        std::cout << '\n';
-
-        std::cout << startRedColor << kCnnectorSymbol << endRedColor;
-        for (int j = 0; j < 9; ++j) {
-            if ((i+1)%3 == 0) {
-                std::cout << startRedColor << std::setw(6) << std::setfill(kLineSymbol) << kCnnectorSymbol << endRedColor;
-            } else {
-                PrintLine(5, "-");
-                if ((j+1)%3 == 0) {
-                    std::cout << startRedColor << kCnnectorSymbol << endRedColor;
-                } else {
-                    std::cout << kCnnectorSymbol;
-                }
-            }
-        }
-        std::cout << '\n';
-    }
-    return out;
 }
 
 Field::~Field() {
