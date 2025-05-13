@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../sudokuLib/sudokuLib.h"
+#include "../sudokuLib/sudokuLib.hpp"
 
 enum class MainMenu : int {
     NewGame = 1,
