@@ -73,7 +73,9 @@ void RunGameWindow(Field& f, Field& initialField, bool& isRunning, int& errorsCo
                                     if (!field[i][j].GetPlaced()) {
                                         field[i][j].SetVisible(false);
                                         FieldData::WriteData(f, "fieldData.txt", errorsCount);
-                                        field[i][j].SetVisible(true);
+                                        if (IsCorrect(input)) {
+                                            field[i][j].SetVisible(true);
+                                        }
                                     }
                                 }
                             }

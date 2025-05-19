@@ -33,5 +33,5 @@ public:
 };
 
 namespace MenuWindow {
-    void RunMenuWindow(Field& f, int& invisibleCellsCount, bool& nextWindow, bool& isRunning);
+    void RunMenuWindow(Field& f, int& invisibleCellsCount, bool& nextWindow, bool& isRunning, bool isContinueButtonAvalible, bool& newGame, int& errorsCount);
 }

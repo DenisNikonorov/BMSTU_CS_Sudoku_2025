@@ -93,13 +93,17 @@ namespace {
 }
 
 namespace MenuWindow {
-void RunMenuWindow(Field& f, int& invisibleCellsCount, bool& nextWindow, bool& isRunning) {
-    sf::RenderWindow window(sf::VideoMode(600, 600), "window");
+void RunMenuWindow(Field& f, int& invisibleCellsCount, bool& nextWindow, bool& isRunning, bool isContinueButtonAvalible, bool& newGame, int& errorsCount) {
+    sf::RenderWindow window(sf::VideoMode(600, 600), "menu");
     sf::Font font;
     if (!font.loadFromFile("../fonts/Ubuntu-B.ttf")) {
         std::cerr << "Error loading font!\n";
     }
 
+    FieldData::GetDataFromFile(f, "fieldData.txt", errorsCount);
+    isContinueButtonAvalible = f.IsEmpty() ? false : true;
+
+    //Text
     sf::Text mainText;
     mainText.setFont(font);
     mainText.setCharacterSize(50);
@@ -113,6 +117,15 @@ void RunMenuWindow(Field& f, int& invisibleCellsCount, bool& nextWindow, bool& i
     selectDifficultyText.setString("Difficulty");
     selectDifficultyText.setPosition(210, 110);
     selectDifficultyText.setFillColor(sf::Color::Black);
+
+    bool showEmptyMessage = false;
+    sf::Text emptyFieldMessageText;
+    emptyFieldMessageText.setFont(font);
+    emptyFieldMessageText.setCharacterSize(30);
+    emptyFieldMessageText.setFillColor(sf::Color::Black);
+    emptyFieldMessageText.setPosition(40, 20);
+    emptyFieldMessageText.setString("Field is empty, you can start new game");
+    //Text
 
     // Buttons
     Pages page = Pages::MainMenu;
@@ -153,11 +166,15 @@ void RunMenuWindow(Field& f, int& invisibleCellsCount, bool& nextWindow, bool& i
             mediumDifficulty.Press(event, currentMousePosition);
             hardDifficulty.Press(event, currentMousePosition);
             returnButton.Press(event, currentMousePosition);
+
+            if (!isContinueButtonAvalible && contnueGameButton.IsClicked()) {
+                showEmptyMessage = true;
+            }
         }
 
         if (page == Pages::MainMenu) {
             startGameButton.setClickable(true);
-            contnueGameButton.setClickable(true); // if field is not empty
+            contnueGameButton.setClickable(true);
             leaveGameButton.setClickable(true);
 
             easyDifficulty.setClickable(false);
@@ -166,15 +183,21 @@ void RunMenuWindow(Field& f, int& invisibleCellsCount, bool& nextWindow, bool& i
             returnButton.setClickable(false);
 
             if (startGameButton.IsClicked()) {
+                newGame = true;
                 page = Pages::SelectDifficulty;
             } else if (contnueGameButton.IsClicked()) {
-                //read data from file
-                //В ПРОЦЕССЕ ВЫПОЛНЕНИЯ ПРОГРАММЫ ФАЙЛ ДОЛЖЕН ОБНОВЛЯТЬСЯ
-                //В НАЧАЛЕ СОХРАНИТЬ ИЗНАЧАЛЬНОЕ СОСТОЯНИЕ ПОЛЯ В initialField!!!!!
-                // (это все есть на гите) :)
+                if (isContinueButtonAvalible) {
+                    f.ToggleClickable(true);
+                    newGame = false;
+                    nextWindow = true;
+                    FieldData::GetDataFromFile(f, "fieldData.txt", errorsCount);
+                    window.close();
+                }
             } else if (leaveGameButton.IsClicked()) {
                 nextWindow = false;
                 isRunning = false;
+                f.MakeEmpty();
+                FieldData::WriteData(f, "fieldData.txt", 0);
                 window.close();
             }
 
@@ -182,7 +205,12 @@ void RunMenuWindow(Field& f, int& invisibleCellsCount, bool& nextWindow, bool& i
             startGameButton.DrawButton(window, font);
             contnueGameButton.DrawButton(window, font);
             leaveGameButton.DrawButton(window, font);
+            if (showEmptyMessage) {
+                window.draw(emptyFieldMessageText);
+            }
+
         } else if (page == Pages::SelectDifficulty) {
+            showEmptyMessage = false;
             startGameButton.setClickable(false);
             contnueGameButton.setClickable(false);
             leaveGameButton.setClickable(false);

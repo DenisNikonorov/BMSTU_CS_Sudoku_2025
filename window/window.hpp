@@ -5,5 +5,5 @@
 
 
 namespace Window {
-    void RunGameWindow(Field& f, bool& isRunning);
+    void RunGameWindow(Field& f, Field& initialField, bool& isRunning, int& errorsCount);
 }
