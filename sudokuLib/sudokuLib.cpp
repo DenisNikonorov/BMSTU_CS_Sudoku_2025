@@ -1,5 +1,7 @@
 #include <iostream>
 #include <random>
+#include <fstream>
+#include <cstring>
 #include "sudokuLib.hpp"
 
 namespace {
@@ -151,6 +153,20 @@ void Cell::Draw(sf::RenderWindow& window, int startX, int startY, sf::Vector2i m
         window.draw(cellValue);
     }
 }
+
+Cell& Cell::operator=(const Cell& other) {
+    this->currentValue = other.currentValue;
+    this->visibleValue = other.visibleValue;
+    this->isVisible = other.isVisible;
+    this->isPlaced = other.isPlaced;
+    this->onClick = other.onClick;
+    this->xPosition = other.xPosition;
+    this->yPosition = other.yPosition;
+    this->width = other.width;
+    this->height = other.height;
+    this->textColor = other.textColor;
+    return *this;
+}
 // class Cell functions
 
 //class Field functions
@@ -268,6 +284,7 @@ bool Field::IsFilled() {
     }
     return true;
 }
+
 bool Field::IsEmpty() {
     for (size_t i = 0; i < 9; ++i) {
         for (size_t j = 0; j < 9; ++j) {
@@ -335,3 +352,75 @@ void ToggleCell(Field& f, sf::Vector2i mousePosition) {
     }
 }
 } // CellFunctions
+
+namespace FieldData {
+void CodeFill(Field& f, char* code, char* mask, int errorsCount) {
+    if (strlen(code) != 81) {
+        std::cerr << "Error: Invalid code!\n";
+    }
+    if (strlen(mask) != 81) {
+        std::cerr << "Error: Invalid mask!\n";
+    }
+
+    if (errorsCount >= 3) {
+        f.MakeEmpty();
+        return;
+    }
+
+    Cell** field = f.GetField();
+    size_t codeSymbol = 0;
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j, codeSymbol++) {
+            int value = code[codeSymbol] - 48;
+            bool visible = mask[codeSymbol] - 48 ? true : false;
+            field[i][j].SetValue(value);
+            field[i][j].SetVisible(visible);
+            if (visible) {
+                field[i][j].SetPlaced(true);
+            }
+        }
+    }
+}
+
+void GetDataFromFile(Field& f, const char* fileName, int& errorsCount) {
+    std::ifstream fin(fileName);
+
+    if (!fin.is_open()) {
+        std::cerr << "Error opening file " << fileName << "!\n";
+    }
+
+    char code[82];
+    char mask[82];
+
+    fin >> code >> mask >> errorsCount;
+
+    CodeFill(f, code, mask, errorsCount);
+    fin.close();
+}
+
+void WriteData(Field& f, const char* fileName, int errorsCount) {
+    std::ofstream fout(fileName);
+
+    if (!fout.is_open()) {
+        std::cerr << "Error opening file " << fileName << "!\n";
+    }
+
+    Cell** field = f.GetField();
+    size_t codeSymbol = 0;
+
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            fout << field[i][j].GetValue();
+        }
+    }
+    fout << '\n';
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            fout << field[i][j].GetVisible();
+        }
+    }
+
+    fout << '\n' << errorsCount;
+    fout.close();
+}
+} // FieldData

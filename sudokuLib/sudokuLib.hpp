@@ -33,6 +33,8 @@ class Cell {
     void Toggle();
     void PlaceValue(int value, int& errorsCount);
     void Draw(sf::RenderWindow& window, int startX, int startY, sf::Vector2i mousePosition, sf::Font& font);
+
+    Cell& operator=(const Cell& other);
 };
 
 class Field : protected Cell {
@@ -76,3 +78,9 @@ class Field : protected Cell {
 namespace CellFunctions {
     void ToggleCell(Field& f, sf::Vector2i mousePosition); //Cell** field, sf::Vector2i mousePosition
 } // CellFunctions
+
+namespace FieldData {
+    void CodeFill(Field& f, char* code, char* mask, int errorsCount);
+    void GetDataFromFile(Field& f, const char* fileName, int& errorsCount);
+    void WriteData(Field& f, const char* fileName, int errorsCount);
+} // FieldData
