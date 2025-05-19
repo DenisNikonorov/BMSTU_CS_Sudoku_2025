@@ -9,15 +9,27 @@ void RunGame() {
     bool nextWindow = true;
     bool isRunning = true;
     Field field;
+    Field initialField;
 
     while (isRunning) {
-        field.FillField();
-        MenuWindow::RunMenuWindow(field, invisibleCellsCount, nextWindow, isRunning);
-        field.MakeNCellsInvisible(invisibleCellsCount);
-        if (nextWindow && isRunning) {
-            Window::RunGameWindow(field, isRunning);
+        int errorsCount = 0;
+        bool isContinueButtonAvalible = false;
+        bool isNewGame = false;
+
+        FieldData::GetDataFromFile(initialField, "fieldData.txt", errorsCount);
+
+        MenuWindow::RunMenuWindow(field, invisibleCellsCount, nextWindow, isRunning, isContinueButtonAvalible, isNewGame, errorsCount);
+        if (isNewGame) {
+            field.MakeEmpty();
+            field.FillField();
+            field.MakeNCellsInvisible(invisibleCellsCount);
+            errorsCount = 0;
+            FieldData::WriteData(field, "fieldData.txt", 0);
+            initialField = field;
         }
-        field.MakeEmpty();
+        if (nextWindow && isRunning) {
+            Window::RunGameWindow(field, initialField, isRunning, errorsCount);
+        }
     }
 }
 
