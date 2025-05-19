@@ -9,11 +9,17 @@ bool IsCorrect(char input) {
 
     return (input >= kOneChar && input <= kNineChar);
 }
+
+enum class GameStatus : int {
+    Win = 1,
+    Lose,
+    Play,
+};
 } // namespace
 
 namespace Window {
-void RunGameWindow(Field& f, bool& isRunning) {
-    sf::RenderWindow window(sf::VideoMode(600, 650), "window");
+void RunGameWindow(Field& f, Field& initialField, bool& isRunning, int& errorsCount) {
+    sf::RenderWindow window(sf::VideoMode(600, 650), "sudoku");
     sf::Font font;
     if (!font.loadFromFile("../fonts/Ubuntu-B.ttf")) {
         std::cerr << "Error loading font!" << '\n';
@@ -21,8 +27,7 @@ void RunGameWindow(Field& f, bool& isRunning) {
 
     Cell** field = f.GetField();
 
-    bool winGame = false;
-    int errorsCount = 0;
+    GameStatus gameStatus;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -39,12 +44,19 @@ void RunGameWindow(Field& f, bool& isRunning) {
                 case sf::Event::Closed :{
                     isRunning = false;
                     window.close();
+                    if (gameStatus == GameStatus::Lose) {
+                        FieldData::WriteData(f, "fieldData.txt", errorsCount);
+                    } else if (gameStatus == GameStatus::Win) {
+                        f.MakeEmpty();
+                        FieldData::WriteData(f, "fieldData.txt", 0);
+                    }
                     break;
                 }
                 case sf::Event::MouseButtonPressed :{
                     if (f.GetClickable()) {
                         sf::Vector2i clickPosition = sf::Mouse::getPosition();
                         CellFunctions::ToggleCell(f, currentMousePosition);
+
                     }
                     break;
                 }
@@ -58,10 +70,16 @@ void RunGameWindow(Field& f, bool& isRunning) {
                                     if (IsCorrect(input)) {
                                         field[i][j].PlaceValue(input - 48, errorsCount);
                                     }
+                                    if (!field[i][j].GetPlaced()) {
+                                        field[i][j].SetVisible(false);
+                                        FieldData::WriteData(f, "fieldData.txt", errorsCount);
+                                        field[i][j].SetVisible(true);
+                                    }
                                 }
                             }
                         }
                     }
+
                     break;
                 }
             }
@@ -74,6 +92,7 @@ void RunGameWindow(Field& f, bool& isRunning) {
 
         if (f.IsFilled() && errorsCount < 3) {
             f.ToggleClickable(false);
+            gameStatus = GameStatus::Win;
 
             Button newGameButton(150, 270, 300, 70, "New game");
             newGameButton.setClickable(true);
@@ -95,6 +114,7 @@ void RunGameWindow(Field& f, bool& isRunning) {
             window.draw(win);
         } else if (errorsCount >= 3) {
             f.ToggleClickable(false);
+            gameStatus = GameStatus::Lose;
 
             Button tryAgainButton(150, 280, 300, 70, "try again");
             tryAgainButton.setClickable(true);
@@ -114,9 +134,26 @@ void RunGameWindow(Field& f, bool& isRunning) {
 
             tryAgainButton.DrawButton(window, font);
             window.draw(lose);
+        } else if (errorsCount < 3 && !f.IsFilled()) {
+            gameStatus = GameStatus::Play;
         }
         window.display();
     }
 
+    if (gameStatus == GameStatus::Win) {
+       f.MakeEmpty();
+       FieldData::WriteData(f, "fieldData.txt", 0);
+    } else if (gameStatus == GameStatus::Play) {
+        for (size_t i = 0; i < 9; ++i) {
+            for (size_t j = 0; j < 9; ++j) {
+                if (!field[i][j].GetPlaced()) {
+                    field[i][j].SetVisible(false);
+                }
+            }
+        }
+        FieldData::WriteData(f, "fieldData.txt", errorsCount);
+    } else if (gameStatus == GameStatus::Lose) {
+        FieldData::WriteData(initialField, "fieldData.txt", 0);
+    }
 }
 } // Window
