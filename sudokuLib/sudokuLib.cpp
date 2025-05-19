@@ -251,7 +251,7 @@ void Field::DrawField(sf::RenderWindow& window, int xFieldPosition, int yFieldPo
 
     sf::Text errors;
     errors.setFont(font);
-    errors.setString("Errors: " + std::to_string(errorsCount));
+    errors.setString("Errors: " + std::to_string(errorsCount) + "/3");
     errors.setCharacterSize(24);
     errors.setFillColor(sf::Color::Black);
     errors.setPosition(10, 10);
@@ -262,6 +262,16 @@ bool Field::IsFilled() {
     for (size_t i = 0; i < 9; ++i) {
         for (size_t j = 0; j < 9; ++j) {
             if (field[i][j].GetPlaced() == false) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+bool Field::IsEmpty() {
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            if (field[i][j].GetValue() != 0) {
                 return false;
             }
         }
@@ -287,6 +297,18 @@ void Field::MakeEmpty() {
             }
         }
     }
+}
+
+Field& Field::operator=(const Field& other) {
+    for (size_t i = 0; i < 9; ++i) {
+        for (size_t j = 0; j < 9; ++j) {
+            this->field[i][j] = other.field[i][j];
+        }
+    }
+    this->xFieldPosition = other.xFieldPosition;
+    this->yFieldPosition = other.yFieldPosition;
+    this->isClickable = other.isClickable;
+    return *this;
 }
 // class Field functions
 

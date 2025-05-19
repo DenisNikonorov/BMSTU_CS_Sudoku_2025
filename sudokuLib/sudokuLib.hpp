@@ -63,11 +63,14 @@ class Field : protected Cell {
     void MakeNCellsInvisible(int count);
     void DrawField(sf::RenderWindow& window, int xFieldPosition, int yFieldPosition, sf::Vector2i mousePosition, sf::Font& font, int errorsCount);
     bool IsFilled();
+    bool IsEmpty();
     void ToggleClickable(bool clickable) { this->isClickable = clickable; }
     bool GetClickable() { return this->isClickable; }
     void MakeEmpty();
 
     sf::Vector2i getPosition();
+
+    Field& operator=(const Field& other);
 };
 
 namespace CellFunctions {
